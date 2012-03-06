@@ -1,8 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>versioned-buildstep</artifactId>
-    <version>0.1-SNAPSHOT</version> <!-- < 1.0 indicates not completely done yet -->
+    <version>0.1-SNAPSHOT</version>
+    <!-- < 1.0 indicates not completely done yet -->
     <packaging>hpi</packaging>
     <name>Lenient Quiet Down Plugin</name>
     <description>Jenkins plugin that provides a buildstep that executes scripts from a git repository..</description>
@@ -46,6 +48,17 @@
         <repository>
             <id>maven.jenkins-ci.org</id>
             <url>http://maven.jenkins-ci.org/content/repositories/releases</url>
+        </repository>
+        <repository>
+            <id>jgit-repository</id>
+            <name>Eclipse JGit Repository</name>
+            <url>http://download.eclipse.org/jgit/maven</url>
+        </repository>
+
+        <repository>
+            <id>guice-maven</id>
+            <name>guice maven</name>
+            <url>http://guice-maven.googlecode.com/svn/trunk</url>
         </repository>
     </repositories>
 
