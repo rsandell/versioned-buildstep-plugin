@@ -26,7 +26,12 @@ package jenkins.plugins.versionedbuildstep;
 
 import hudson.Extension;
 import hudson.model.Hudson;
+import hudson.model.ItemGroup;
 import hudson.model.ManagementLink;
+import jenkins.plugins.versionedbuildstep.model.CentralRepository;
+import jenkins.plugins.versionedbuildstep.model.RepoContainer;
+
+import java.util.Map;
 
 /**
  * Management page for the central repositories that all users can use.
@@ -34,7 +39,8 @@ import hudson.model.ManagementLink;
  * @author Robert Sandell &lt;sandell.robert@gmail.com&gt;
  */
 @Extension
-public class CentralRepositories extends ManagementLink {
+public class CentralRepositories extends ManagementLink implements RepoContainer<CentralRepository> {
+
     @Override
     public String getIconFileName() {
         return "package.png";
@@ -50,12 +56,31 @@ public class CentralRepositories extends ManagementLink {
         return "build-script-repositories";
     }
 
-    public CentralRepositories getInstance() {
+    public static CentralRepositories getInstance() {
         for (ManagementLink l : Hudson.getInstance().getManagementLinks()) {
             if (l instanceof CentralRepositories) {
                 return (CentralRepositories)l;
             }
         }
         throw new IllegalStateException("The CentralRepositories ManagementLink is not loaded yet!");
+    }
+
+    @Override
+    public void renamed(CentralRepository repo, String oldName) {
+        getRepos().remove(oldName);
+        getRepos().put(repo.getName(), repo);
+    }
+
+    @Override
+    public boolean contains(String name) {
+        return getRepos().containsKey(name);
+    }
+
+    private Map<String, CentralRepository> getRepos() {
+        return PluginImpl.getInstance().getCentralRepositories();
+    }
+
+    public CentralRepository getRepo(String name) {
+        return getRepos().get(name);
     }
 }

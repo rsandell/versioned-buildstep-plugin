@@ -29,7 +29,6 @@ import hudson.model.Failure;
 import hudson.plugins.git.GitException;
 import jenkins.model.Jenkins;
 import jenkins.plugins.versionedbuildstep.Git;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 
@@ -61,12 +60,16 @@ public abstract class AbstractRepository {
         return git;
     }
 
-    public void init() throws GitException, IOException, InterruptedException {
+    protected void init() throws GitException, IOException, InterruptedException {
         getGit().doClone(url);
     }
 
     public void update() throws GitException, IOException, InterruptedException {
-        getGit().doFetch(url);
+        if (getGit().isInitialized()) {
+            getGit().doFetch(url);
+        } else {
+            init();
+        }
     }
 
     public String getName() {

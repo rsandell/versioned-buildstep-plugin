@@ -30,6 +30,7 @@ import hudson.plugins.git.GitAPI;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.IGitAPI;
 import hudson.util.LogTaskListener;
+import hudson.util.StreamTaskListener;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
@@ -49,10 +50,12 @@ public class Git {
     private static final Logger logger = Logger.getLogger(Git.class.getName());
 
     IGitAPI api;
+    private FilePath logFile;
 
 
     public Git(FilePath workspace) throws IOException, InterruptedException {
-        api = new GitAPI("git", workspace, new LogTaskListener(logger, Level.FINE),
+        logFile = workspace.getParent().child("repo-" + workspace.getName() + ".log");
+        api = new GitAPI("git", workspace, new StreamTaskListener(logFile.write()),
                 Hudson.getInstance().toComputer().getEnvironment(), null);
     }
 
@@ -64,6 +67,10 @@ public class Git {
 
     public void doFetch(String url) throws GitException {
         api.fetch(newRemoteConfig(url));
+    }
+
+    public boolean isInitialized() {
+        return api.hasGitRepo();
     }
 
     private RemoteConfig newRemoteConfig(String url) {

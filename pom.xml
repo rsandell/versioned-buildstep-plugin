@@ -6,7 +6,7 @@
     <version>0.1-SNAPSHOT</version>
     <!-- < 1.0 indicates not completely done yet -->
     <packaging>hpi</packaging>
-    <name>Lenient Quiet Down Plugin</name>
+    <name>Versioned Build step Plugin</name>
     <description>Jenkins plugin that provides a buildstep that executes scripts from a git repository..</description>
 
     <parent>
