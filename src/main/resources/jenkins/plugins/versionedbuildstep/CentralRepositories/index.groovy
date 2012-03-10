@@ -24,10 +24,12 @@
 
 package jenkins.plugins.versionedbuildstep.CentralRepositories
 
+import jenkins.plugins.versionedbuildstep.model.AbstractRepository;
+
 /**
- * 
  *
- *@author Robert Sandell &lt;sandell.robert@gmail.com&gt;
+ *
+ * @author Robert Sandell &lt;sandell.robert@gmail.com&gt;
  */
 def f = namespace(lib.FormTagLib)
 def l = namespace(lib.LayoutTagLib)
@@ -35,14 +37,18 @@ def j = namespace(lib.JenkinsTagLib)
 
 l.layout(title: _("Central Build script Repositories")) {
     l.side_panel() {
-        l.tasks(namer: _("Repos"), icon: "clipboard.png") {
+        l.tasks(name: _("Repos"), icon: "clipboard.png") {
             l.task(title: _("Nisse"), icon: "clipboard.png")
         }
     }
     l.main_panel() {
         f.form(name: "theForm", action: "something", method: "POST") {
-            f.section(title: "Hello") {
-                f.textarea()
+            f.section(title: _("Repos")) {
+                f.block {
+                    f.hetero_list(name:"repos", hasHeader:true, descriptors:AbstractRepository.all(),
+                            items:instance.getReposCollection(),
+                            addCaption:_("Add a new repository"), deleteCaption:_("Delete repo"))
+                }
             }
         }
     }

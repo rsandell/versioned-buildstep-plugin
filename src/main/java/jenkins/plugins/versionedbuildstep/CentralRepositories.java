@@ -26,11 +26,13 @@ package jenkins.plugins.versionedbuildstep;
 
 import hudson.Extension;
 import hudson.model.Hudson;
-import hudson.model.ItemGroup;
 import hudson.model.ManagementLink;
-import jenkins.plugins.versionedbuildstep.model.CentralRepository;
+import jenkins.plugins.versionedbuildstep.model.AbstractRepository;
 import jenkins.plugins.versionedbuildstep.model.RepoContainer;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,7 +41,7 @@ import java.util.Map;
  * @author Robert Sandell &lt;sandell.robert@gmail.com&gt;
  */
 @Extension
-public class CentralRepositories extends ManagementLink implements RepoContainer<CentralRepository> {
+public class CentralRepositories extends ManagementLink implements RepoContainer<AbstractRepository> {
 
     @Override
     public String getIconFileName() {
@@ -59,14 +61,14 @@ public class CentralRepositories extends ManagementLink implements RepoContainer
     public static CentralRepositories getInstance() {
         for (ManagementLink l : Hudson.getInstance().getManagementLinks()) {
             if (l instanceof CentralRepositories) {
-                return (CentralRepositories)l;
+                return (CentralRepositories) l;
             }
         }
         throw new IllegalStateException("The CentralRepositories ManagementLink is not loaded yet!");
     }
 
     @Override
-    public void renamed(CentralRepository repo, String oldName) {
+    public void renamed(AbstractRepository repo, String oldName) {
         getRepos().remove(oldName);
         getRepos().put(repo.getName(), repo);
     }
@@ -76,11 +78,15 @@ public class CentralRepositories extends ManagementLink implements RepoContainer
         return getRepos().containsKey(name);
     }
 
-    private Map<String, CentralRepository> getRepos() {
+    private Map<String, AbstractRepository> getRepos() {
         return PluginImpl.getInstance().getCentralRepositories();
     }
 
-    public CentralRepository getRepo(String name) {
+    public Collection<AbstractRepository> getReposCollection() {
+        return getRepos().values();
+    }
+
+    public AbstractRepository getRepo(String name) {
         return getRepos().get(name);
     }
 }

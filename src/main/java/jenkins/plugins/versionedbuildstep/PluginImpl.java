@@ -26,7 +26,7 @@ package jenkins.plugins.versionedbuildstep;
 
 import hudson.Plugin;
 import jenkins.model.Jenkins;
-import jenkins.plugins.versionedbuildstep.model.CentralRepository;
+import jenkins.plugins.versionedbuildstep.model.AbstractRepository;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,13 +36,13 @@ import java.util.Map;
  */
 public class PluginImpl extends Plugin {
 
-    private Map<String, CentralRepository> centralRepositories;
+    private Map<String, AbstractRepository> centralRepositories;
 
     @Override
     public void start() throws Exception {
         load();
         if (centralRepositories == null) {
-            centralRepositories = new HashMap<String, CentralRepository>();
+            centralRepositories = new HashMap<String, AbstractRepository>();
         }
     }
 
@@ -54,7 +54,7 @@ public class PluginImpl extends Plugin {
         return instance;
     }
 
-    public Map<String, CentralRepository> getCentralRepositories() {
+    public Map<String, AbstractRepository> getCentralRepositories() {
         return centralRepositories;
     }
 }

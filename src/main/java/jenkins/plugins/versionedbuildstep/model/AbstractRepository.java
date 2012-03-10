@@ -24,68 +24,44 @@
 
 package jenkins.plugins.versionedbuildstep.model;
 
+import hudson.ExtensionList;
 import hudson.FilePath;
-import hudson.model.Failure;
-import hudson.plugins.git.GitException;
+import hudson.model.Describable;
+import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
-import jenkins.plugins.versionedbuildstep.Git;
 
 import java.io.IOException;
 
 /**
- * Base class for repositories.
- *
  * @author Robert Sandell &lt;sandell.robert@gmail.com&gt;
  */
-public abstract class AbstractRepository {
+public abstract class AbstractRepository implements Describable<AbstractRepository> {
+
     private String name;
-    private String url;
-    private FilePath gitDir;
-    private transient Git git;
+    private FilePath repoDir;
 
-    public AbstractRepository(FilePath baseDir, String name, String url) {
+    protected AbstractRepository(FilePath baseDir, String name) {
         Jenkins.checkGoodName(name);
-        if (url == null || url.isEmpty()) {
-            throw new Failure("URL must not be empty");
-        }
+
         this.name = name;
-        this.url = url;
-        gitDir = baseDir.child(name);
+        repoDir = baseDir.child(name);
     }
 
-    protected synchronized Git getGit() throws IOException, InterruptedException {
-        if (git == null) {
-            git = new Git(gitDir);
-        }
-        return git;
-    }
+    public abstract void init() throws IOException, InterruptedException;
 
-    protected void init() throws GitException, IOException, InterruptedException {
-        getGit().doClone(url);
-    }
-
-    public void update() throws GitException, IOException, InterruptedException {
-        if (getGit().isInitialized()) {
-            getGit().doFetch(url);
-        } else {
-            init();
-        }
-    }
+    public abstract void update() throws IOException, InterruptedException;
 
     public String getName() {
         return name;
     }
 
-    public String getUrl() {
-        return url;
+    public FilePath getRepoDir() {
+        return repoDir;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public static abstract class RepositoryDescriptor extends Descriptor<AbstractRepository> {
+        public static ExtensionList<RepositoryDescriptor> all() {
+            return Jenkins.getInstance().getDescriptorList(AbstractRepository.class);
+        }
     }
-
-    public FilePath getGitDir() {
-        return gitDir;
-    }
-
 }
