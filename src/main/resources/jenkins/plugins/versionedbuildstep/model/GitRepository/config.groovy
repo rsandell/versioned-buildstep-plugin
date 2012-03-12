@@ -22,40 +22,24 @@
  * THE SOFTWARE.
  */
 
-package jenkins.plugins.versionedbuildstep;
-
-import hudson.Plugin;
-import jenkins.model.Jenkins;
-import jenkins.plugins.versionedbuildstep.model.AbstractRepository;
-import jenkins.plugins.versionedbuildstep.model.GitRepository;
-
-import java.util.HashMap;
-import java.util.Map;
+package jenkins.plugins.versionedbuildstep.model.GitRepository
 
 /**
- * @author Robert Sandell &lt;sandell.robert@gmail.com&gt;
+ * 
+ *
+ *@author Robert Sandell &lt;sandell.robert@gmail.com&gt;
  */
-public class PluginImpl extends Plugin {
+def f = namespace(lib.FormTagLib)
+def l = namespace(lib.LayoutTagLib)
 
-    private Map<String, AbstractRepository> centralRepositories;
+f.entry(title:_("Name"), name:"name") {
+    f.textbox(name:"name", field:"name")
+}
 
-    @Override
-    public void start() throws Exception {
-        load();
-        if (centralRepositories == null) {
-            centralRepositories = new HashMap<String, AbstractRepository>();
-        }
-    }
+f.entry(title:_("Url"), name:"url") {
+    f.textbox(name:"url", field:"url")
+}
 
-    public static PluginImpl getInstance() {
-        PluginImpl instance = Jenkins.getInstance().getPlugin(PluginImpl.class);
-        if (instance == null) {
-            throw new IllegalStateException("Plugin not loaded!");
-        }
-        return instance;
-    }
+f.invisibleEntry() {
 
-    public Map<String, AbstractRepository> getCentralRepositories() {
-        return centralRepositories;
-    }
 }

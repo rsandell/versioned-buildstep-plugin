@@ -25,11 +25,15 @@
 package jenkins.plugins.versionedbuildstep;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.model.Hudson;
 import hudson.model.ManagementLink;
+import hudson.model.TopLevelItem;
+import jenkins.model.Jenkins;
 import jenkins.plugins.versionedbuildstep.model.AbstractRepository;
 import jenkins.plugins.versionedbuildstep.model.RepoContainer;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -42,6 +46,8 @@ import java.util.Map;
  */
 @Extension
 public class CentralRepositories extends ManagementLink implements RepoContainer<AbstractRepository> {
+
+    public static final String DIR_NAME = ".build-script-repositories";
 
     @Override
     public String getIconFileName() {
@@ -68,12 +74,6 @@ public class CentralRepositories extends ManagementLink implements RepoContainer
     }
 
     @Override
-    public void renamed(AbstractRepository repo, String oldName) {
-        getRepos().remove(oldName);
-        getRepos().put(repo.getName(), repo);
-    }
-
-    @Override
     public boolean contains(String name) {
         return getRepos().containsKey(name);
     }
@@ -88,5 +88,15 @@ public class CentralRepositories extends ManagementLink implements RepoContainer
 
     public AbstractRepository getRepo(String name) {
         return getRepos().get(name);
+    }
+
+    @Override
+    public FilePath getRootDir() {
+        return Jenkins.getInstance().getRootPath().child(DIR_NAME);
+    }
+
+    @Override
+    public void save() throws IOException {
+        PluginImpl.getInstance().save();
     }
 }

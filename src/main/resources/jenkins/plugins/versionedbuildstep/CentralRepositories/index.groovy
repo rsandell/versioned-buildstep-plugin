@@ -24,7 +24,8 @@
 
 package jenkins.plugins.versionedbuildstep.CentralRepositories
 
-import jenkins.plugins.versionedbuildstep.model.AbstractRepository;
+import jenkins.plugins.versionedbuildstep.model.AbstractRepository
+import jenkins.plugins.versionedbuildstep.CentralRepositories;
 
 /**
  *
@@ -35,21 +36,19 @@ def f = namespace(lib.FormTagLib)
 def l = namespace(lib.LayoutTagLib)
 def j = namespace(lib.JenkinsTagLib)
 
+
 l.layout(title: _("Central Build script Repositories")) {
     l.side_panel() {
         l.tasks(name: _("Repos"), icon: "clipboard.png") {
             l.task(title: _("Nisse"), icon: "clipboard.png")
         }
     }
+    def instance = CentralRepositories.getInstance();
+    //def descriptor = it.descriptor;
+
     l.main_panel() {
-        f.form(name: "theForm", action: "something", method: "POST") {
-            f.section(title: _("Repos")) {
-                f.block {
-                    f.hetero_list(name:"repos", hasHeader:true, descriptors:AbstractRepository.all(),
-                            items:instance.getReposCollection(),
-                            addCaption:_("Add a new repository"), deleteCaption:_("Delete repo"))
-                }
-            }
+        instance.getReposCollection().each {repo ->
+            include(repo, "display.jelly");
         }
     }
 }

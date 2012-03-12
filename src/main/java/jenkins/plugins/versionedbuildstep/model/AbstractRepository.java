@@ -29,27 +29,50 @@ import hudson.FilePath;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
+import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.Date;
 
 /**
  * @author Robert Sandell &lt;sandell.robert@gmail.com&gt;
  */
 public abstract class AbstractRepository implements Describable<AbstractRepository> {
 
-    private String name;
-    private FilePath repoDir;
+    private final String name;
+    private final FilePath repoDir;
+    private final Date created;
+    private Date lastUpdated;
+    private final RepoContainer<AbstractRepository> container;
 
-    protected AbstractRepository(FilePath baseDir, String name) {
+    protected AbstractRepository(RepoContainer<AbstractRepository> container, FilePath baseDir, String name)
+            throws IOException, InterruptedException {
         Jenkins.checkGoodName(name);
 
+        this.container = container;
         this.name = name;
         repoDir = baseDir.child(name);
+        repoDir.mkdirs();
+        this.created = new Date();
     }
 
     public abstract void init() throws IOException, InterruptedException;
 
     public abstract void update() throws IOException, InterruptedException;
+
+    public abstract void reConfigure(StaplerRequest request, StaplerResponse response) throws Descriptor.FormException, ServletException;
+
+    public void doConfigSubmit(StaplerRequest request, StaplerResponse response) throws Descriptor.FormException, ServletException {
+        reConfigure(request, response);
+        try {
+            container.save();
+        } catch (IOException e) {
+            throw new Descriptor.FormException("Unable to save: " + e.getMessage(), e, "name");
+        }
+    }
 
     public String getName() {
         return name;
@@ -59,7 +82,36 @@ public abstract class AbstractRepository implements Describable<AbstractReposito
         return repoDir;
     }
 
+    public Date getCreated() {
+        return created;
+    }
+
+    public Date getLastUpdated() {
+        return lastUpdated;
+    }
+
     public static abstract class RepositoryDescriptor extends Descriptor<AbstractRepository> {
+
+        public abstract AbstractRepository createInstance(RepoContainer<AbstractRepository> container,
+                                                          FilePath baseDir, StaplerRequest req, String name) throws IOException, InterruptedException;
+
+        @Override
+        public AbstractRepository newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+            RepoContainer object = req.findAncestorObject(RepoContainer.class);
+            if (object == null) {
+                throw new FormException("The repository must be created in a valid container!", "name");
+            }
+            try {
+                String name = formData.optString("name");
+                if (name == null || name.isEmpty()) {
+                    throw new FormException("Must provide a name!", "name");
+                }
+                return createInstance(object, object.getRootDir(), req, name);
+            } catch (Exception e) {
+                throw new FormException("Unable to create repository: " + e.getMessage(), e, "name");
+            }
+        }
+
         public static ExtensionList<RepositoryDescriptor> all() {
             return Jenkins.getInstance().getDescriptorList(AbstractRepository.class);
         }

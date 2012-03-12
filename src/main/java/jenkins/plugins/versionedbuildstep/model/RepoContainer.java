@@ -24,12 +24,19 @@
 
 package jenkins.plugins.versionedbuildstep.model;
 
+import hudson.FilePath;
+
+import java.io.IOException;
+import java.io.Serializable;
+
 /**
  * @author Robert Sandell &lt;sandell.robert@gmail.com&gt;
  */
-public interface RepoContainer<T extends AbstractRepository> {
-
-    void renamed(T repo, String oldName);
+public interface RepoContainer<T extends AbstractRepository> extends Serializable {
 
     boolean contains(String name);
+
+    FilePath getRootDir();
+
+    void save() throws IOException;
 }

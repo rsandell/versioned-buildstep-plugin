@@ -31,8 +31,13 @@ import hudson.model.Failure;
 import hudson.plugins.git.GitException;
 import jenkins.model.Jenkins;
 import jenkins.plugins.versionedbuildstep.Git;
+import net.sf.json.JSONObject;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
+import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.Date;
 
 /**
  * Base class for repositories.
@@ -45,11 +50,8 @@ public class GitRepository extends AbstractRepository {
 
     private transient Git git;
 
-    public GitRepository(FilePath baseDir, String name, String url) {
-        super(baseDir, name);
-        if (url == null || url.isEmpty()) {
-            throw new Failure("URL must not be empty");
-        }
+    public GitRepository(RepoContainer<AbstractRepository> container, FilePath baseDir, String name) throws IOException, InterruptedException {
+        super(container, baseDir, name);
     }
 
     protected synchronized Git getGit() throws IOException, InterruptedException {
@@ -69,6 +71,11 @@ public class GitRepository extends AbstractRepository {
         } else {
             init();
         }
+    }
+
+    @Override
+    public void reConfigure(StaplerRequest request, StaplerResponse response) throws Descriptor.FormException, ServletException {
+        url = request.getSubmittedForm().getString("url");
     }
 
     public String getUrl() {
@@ -91,6 +98,11 @@ public class GitRepository extends AbstractRepository {
         @Override
         public String getDisplayName() {
             return "Git Repository";
+        }
+
+        @Override
+        public AbstractRepository createInstance(RepoContainer<AbstractRepository> container, FilePath baseDir, StaplerRequest req, String name) throws IOException, InterruptedException {
+            return new GitRepository(container, baseDir, name);
         }
     }
 }
