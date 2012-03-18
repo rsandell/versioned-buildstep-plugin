@@ -29,6 +29,7 @@ import hudson.FilePath;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
+import jenkins.plugins.versionedbuildstep.CentralRepositories;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -46,17 +47,25 @@ public abstract class AbstractRepository implements Describable<AbstractReposito
     private final FilePath repoDir;
     private final Date created;
     private Date lastUpdated;
-    private final RepoContainer<AbstractRepository> container;
+    protected RepoContainer<AbstractRepository> owner;
 
     protected AbstractRepository(RepoContainer<AbstractRepository> container, FilePath baseDir, String name)
             throws IOException, InterruptedException {
         Jenkins.checkGoodName(name);
 
-        this.container = container;
+        this.owner = container;
         this.name = name;
         repoDir = baseDir.child(name);
         repoDir.mkdirs();
         this.created = new Date();
+    }
+
+    protected AbstractRepository(String name, FilePath repoDir, Date created, Date lastUpdated, RepoContainer<AbstractRepository> owner) {
+        this.name = name;
+        this.repoDir = repoDir;
+        this.created = created;
+        this.lastUpdated = lastUpdated;
+        this.owner = owner;
     }
 
     public abstract void init() throws IOException, InterruptedException;
@@ -68,7 +77,7 @@ public abstract class AbstractRepository implements Describable<AbstractReposito
     public void doConfigSubmit(StaplerRequest request, StaplerResponse response) throws Descriptor.FormException, ServletException {
         reConfigure(request, response);
         try {
-            container.save();
+            owner.save();
         } catch (IOException e) {
             throw new Descriptor.FormException("Unable to save: " + e.getMessage(), e, "name");
         }
@@ -89,6 +98,12 @@ public abstract class AbstractRepository implements Describable<AbstractReposito
     public Date getLastUpdated() {
         return lastUpdated;
     }
+
+    public void setOwner(RepoContainer<AbstractRepository> container) {
+        this.owner = container;
+    }
+
+    public abstract AbstractRepository copy(RepoContainer<AbstractRepository> owner, String newName);
 
     public static abstract class RepositoryDescriptor extends Descriptor<AbstractRepository> {
 

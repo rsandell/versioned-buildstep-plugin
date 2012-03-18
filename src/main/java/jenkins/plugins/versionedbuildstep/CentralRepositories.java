@@ -26,18 +26,22 @@ package jenkins.plugins.versionedbuildstep;
 
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.model.Hudson;
-import hudson.model.ManagementLink;
-import hudson.model.TopLevelItem;
+import hudson.model.*;
+import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import jenkins.plugins.versionedbuildstep.model.AbstractRepository;
 import jenkins.plugins.versionedbuildstep.model.RepoContainer;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import static jenkins.model.Jenkins.checkGoodName;
 
 /**
  * Management page for the central repositories that all users can use.
@@ -86,8 +90,63 @@ public class CentralRepositories extends ManagementLink implements RepoContainer
         return getRepos().values();
     }
 
+    public Set<String> getRepoNames() {
+        return getRepos().keySet();
+    }
+
     public AbstractRepository getRepo(String name) {
         return getRepos().get(name);
+    }
+
+    public AbstractRepository doNewRepoSubmit(StaplerRequest request, StaplerResponse response) throws Descriptor.FormException, ServletException, IOException {
+        String name = request.getParameter("name");
+        checkGoodName(name);
+
+        if (getRepo(name) != null) {
+            throw new Descriptor.FormException(Messages.CentralRepositories_ErrorRepoExists(name), "name");
+        }
+
+        String mode = request.getParameter("mode");
+        if (mode == null || mode.length() == 0) {
+            throw new Descriptor.FormException(Messages.Repo_MissingMode(), "mode");
+        }
+        AbstractRepository result;
+        if (mode.equals("copy")) {
+            String from = request.getParameter("from");
+
+            // resolve a name to Item
+            AbstractRepository src = null;
+            if (from != null && !from.isEmpty()) {
+                src = getRepo(from);
+            } else {
+                throw new Failure(Messages.CentralRepositories_MissingFrom());
+            }
+
+            if (src == null) {
+                throw new Descriptor.FormException(Messages.Repo_NoSuchRepository(from), "from");
+            }
+            result = src.copy(this, name);
+        } else {
+            result = AbstractRepository.RepositoryDescriptor.all().
+                getDynamic(mode).newInstance(request, request.getSubmittedForm());
+        }
+
+        // redirect to the config screen
+        response.sendRedirect2(getUrlName() + "/" + result.getName() + "/configure");
+
+        return result;
+    }
+
+    public FormValidation doCheckNewRepoName(@QueryParameter String value) {
+        try {
+            Jenkins.checkGoodName(value);
+            if (getRepo(value) != null) {
+                return FormValidation.error(Messages.CentralRepositories_ErrorRepoExists(value));
+            }
+        } catch (Failure failure) {
+            return FormValidation.error(failure, failure.getMessage());
+        }
+        return FormValidation.ok();
     }
 
     @Override

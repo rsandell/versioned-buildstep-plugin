@@ -22,28 +22,6 @@
   ~ THE SOFTWARE.
   -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
-    <table width="100%" cellpadding="2" cellspacing="0" border="0">
-        <tr>
-            <td width="25">
-                Edit
-            </td>
-            <td width="25">
-                Share
-            </td>
-            <td width="25">
-                Update
-            </td>
-            <td width="25">
-                Browse
-            </td>
-            <td>
-                <st:nbsp/>
-            </td>
-            <td>
-                <em>Created:  ${it.created} </em>
-                <em>Last Updated:  ${it.lastUpdated} </em>
-            </td>
-        </tr>
-    </table>
+<j:jelly xmlns:j="jelly:core">
+    <strong>Url: </strong> ${it.url}
 </j:jelly>

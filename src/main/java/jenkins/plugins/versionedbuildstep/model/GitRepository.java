@@ -27,11 +27,10 @@ package jenkins.plugins.versionedbuildstep.model;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Descriptor;
-import hudson.model.Failure;
 import hudson.plugins.git.GitException;
 import jenkins.model.Jenkins;
+import jenkins.plugins.versionedbuildstep.CentralRepositories;
 import jenkins.plugins.versionedbuildstep.Git;
-import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -49,6 +48,11 @@ public class GitRepository extends AbstractRepository {
     private String url;
 
     private transient Git git;
+
+    private GitRepository(String name, FilePath repoDir, Date created, Date lastUpdated, RepoContainer<AbstractRepository> owner, String url) {
+        super(name, repoDir, created, lastUpdated, owner);
+        this.url = url;
+    }
 
     public GitRepository(RepoContainer<AbstractRepository> container, FilePath baseDir, String name) throws IOException, InterruptedException {
         super(container, baseDir, name);
@@ -76,6 +80,14 @@ public class GitRepository extends AbstractRepository {
     @Override
     public void reConfigure(StaplerRequest request, StaplerResponse response) throws Descriptor.FormException, ServletException {
         url = request.getSubmittedForm().getString("url");
+    }
+
+    @Override
+    public AbstractRepository copy(RepoContainer<AbstractRepository> owner, String newName) {
+        GitRepository repository = new GitRepository(newName,
+                getRepoDir().getParent().child(newName), new Date(), null, owner, url);
+
+        return repository;
     }
 
     public String getUrl() {

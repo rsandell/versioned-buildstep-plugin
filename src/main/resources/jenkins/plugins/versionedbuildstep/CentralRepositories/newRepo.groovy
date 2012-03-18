@@ -24,33 +24,31 @@
 
 package jenkins.plugins.versionedbuildstep.CentralRepositories
 
+import jenkins.plugins.versionedbuildstep.CentralRepositories
 import jenkins.plugins.versionedbuildstep.model.AbstractRepository
-import jenkins.plugins.versionedbuildstep.CentralRepositories;
 
 /**
+ * 
  *
- *
- * @author Robert Sandell &lt;sandell.robert@gmail.com&gt;
+ *@author Robert Sandell &lt;sandell.robert@gmail.com&gt;
  */
 def f = namespace(lib.FormTagLib)
 def l = namespace(lib.LayoutTagLib)
 def j = namespace(lib.JenkinsTagLib)
+def n = namespace(lib.jenkins.NewFromListTagLib)
 
 
 l.layout(title: _("Central Build script Repositories")) {
     l.side_panel() {
-        l.tasks() {
-            l.task(title: _("New Repo"), icon: "clipboard.png", href: "newRepo")
-        }
+
     }
     def instance = CentralRepositories.getInstance();
+    def repoDescriptors = AbstractRepository.RepositoryDescriptor.all();
     //def descriptor = it.descriptor;
 
     l.main_panel() {
-        instance.getReposCollection().each {repo ->
-            include(repo, "display.jelly");
-        }
+        n.form(nameTitle: _("New Repo"), action: "newRepoSubmit",
+        descriptors: repoDescriptors, checkUrl: "checkNewRepoName",
+                copyNames: instance.getRepoNames(), copyTitle: _("Copy Existing"))
     }
 }
-
-
