@@ -30,14 +30,9 @@ package jenkins.plugins.versionedbuildstep.model.GitRepository
  *@author Robert Sandell &lt;sandell.robert@gmail.com&gt;
  */
 def f = namespace(lib.FormTagLib)
-def l = namespace(lib.LayoutTagLib)
-
-f.entry(title:_("Name"), name:"name") {
-    f.textbox(name:"name", field:"name")
-}
 
 f.entry(title:_("Url"), name:"url") {
-    f.textbox(name:"url", field:"url")
+    f.textbox(name:"url", field:"url", value: my.getUrl())
 }
 
 f.invisibleEntry() {

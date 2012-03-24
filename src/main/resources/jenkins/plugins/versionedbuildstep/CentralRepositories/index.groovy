@@ -24,7 +24,6 @@
 
 package jenkins.plugins.versionedbuildstep.CentralRepositories
 
-import jenkins.plugins.versionedbuildstep.model.AbstractRepository
 import jenkins.plugins.versionedbuildstep.CentralRepositories;
 
 /**
@@ -38,12 +37,11 @@ def j = namespace(lib.JenkinsTagLib)
 
 
 l.layout(title: _("Central Build script Repositories")) {
-    l.side_panel() {
-        l.tasks() {
-            l.task(title: _("New Repo"), icon: "clipboard.png", href: "newRepo")
-        }
-    }
     def instance = CentralRepositories.getInstance();
+    l.side_panel() {
+        include(instance, "sidepanel.jelly")
+    }
+
     //def descriptor = it.descriptor;
 
     l.main_panel() {

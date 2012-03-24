@@ -39,4 +39,6 @@ public interface RepoContainer<T extends AbstractRepository> extends Serializabl
     FilePath getRootDir();
 
     void save() throws IOException;
+
+    String getFullUrl();
 }

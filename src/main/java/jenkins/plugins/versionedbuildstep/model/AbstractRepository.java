@@ -39,6 +39,10 @@ import java.io.IOException;
 import java.util.Date;
 
 /**
+ * An abstract repository implementation, extend this and put @{@link hudson.Extension} on its descriptor
+ * to provide a new repository type.
+ * {@link GitRepository} is one such implementation.
+ *
  * @author Robert Sandell &lt;sandell.robert@gmail.com&gt;
  */
 public abstract class AbstractRepository implements Describable<AbstractRepository> {
@@ -72,15 +76,18 @@ public abstract class AbstractRepository implements Describable<AbstractReposito
 
     public abstract void update() throws IOException, InterruptedException;
 
-    public abstract void reConfigure(StaplerRequest request, StaplerResponse response) throws Descriptor.FormException, ServletException;
+    public abstract void reConfigure(StaplerRequest request, StaplerResponse response)
+            throws Descriptor.FormException, ServletException;
 
-    public void doConfigSubmit(StaplerRequest request, StaplerResponse response) throws Descriptor.FormException, ServletException {
+    public void doConfigSubmit(StaplerRequest request, StaplerResponse response)
+            throws Descriptor.FormException, ServletException, IOException {
         reConfigure(request, response);
         try {
             owner.save();
         } catch (IOException e) {
             throw new Descriptor.FormException("Unable to save: " + e.getMessage(), e, "name");
         }
+        response.sendRedirect2(getOwner().getFullUrl());
     }
 
     public String getName() {
@@ -101,6 +108,10 @@ public abstract class AbstractRepository implements Describable<AbstractReposito
 
     public void setOwner(RepoContainer<AbstractRepository> container) {
         this.owner = container;
+    }
+
+    public RepoContainer<AbstractRepository> getOwner() {
+        return owner;
     }
 
     public abstract AbstractRepository copy(RepoContainer<AbstractRepository> owner, String newName);
@@ -127,8 +138,22 @@ public abstract class AbstractRepository implements Describable<AbstractReposito
             }
         }
 
+        /**
+         * All registered {@link RepositoryDescriptor}s.
+         * @return the list of them.
+         */
         public static ExtensionList<RepositoryDescriptor> all() {
             return Jenkins.getInstance().getDescriptorList(AbstractRepository.class);
         }
+
+        public static RepositoryDescriptor getFor(String repoClassName) {
+            for(RepositoryDescriptor d : all()) {
+                if (d.clazz.getName().equals(repoClassName)) {
+                    return d;
+                }
+            }
+            return null;
+        }
+
     }
 }

@@ -80,6 +80,7 @@ public class GitRepository extends AbstractRepository {
     @Override
     public void reConfigure(StaplerRequest request, StaplerResponse response) throws Descriptor.FormException, ServletException {
         url = request.getSubmittedForm().getString("url");
+        git = null;
     }
 
     @Override

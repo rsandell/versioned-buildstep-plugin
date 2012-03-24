@@ -26,7 +26,10 @@ package jenkins.plugins.versionedbuildstep;
 
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.model.*;
+import hudson.model.Descriptor;
+import hudson.model.Failure;
+import hudson.model.Hudson;
+import hudson.model.ManagementLink;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import jenkins.plugins.versionedbuildstep.model.AbstractRepository;
@@ -98,7 +101,7 @@ public class CentralRepositories extends ManagementLink implements RepoContainer
         return getRepos().get(name);
     }
 
-    public AbstractRepository doNewRepoSubmit(StaplerRequest request, StaplerResponse response) throws Descriptor.FormException, ServletException, IOException {
+    public void doNewRepoSubmit(StaplerRequest request, StaplerResponse response) throws Descriptor.FormException, ServletException, IOException {
         String name = request.getParameter("name");
         checkGoodName(name);
 
@@ -127,14 +130,20 @@ public class CentralRepositories extends ManagementLink implements RepoContainer
             }
             result = src.copy(this, name);
         } else {
-            result = AbstractRepository.RepositoryDescriptor.all().
-                getDynamic(mode).newInstance(request, request.getSubmittedForm());
+            AbstractRepository.RepositoryDescriptor descriptor = AbstractRepository.RepositoryDescriptor.getFor(mode);
+            if (descriptor == null) {
+                throw new Failure(Messages.Repo_UnknownRepositoryType(mode));
+            }
+            result = descriptor.newInstance(request, request.getSubmittedForm());
         }
+        result.setOwner(this);
+        getRepos().put(result.getName(), result);
+        save();
 
         // redirect to the config screen
-        response.sendRedirect2(getUrlName() + "/" + result.getName() + "/configure");
+        response.sendRedirect2(Jenkins.getInstance().getRootUrl() + "/" + getUrlName()
+                + "/" + result.getName() + "/configure");
 
-        return result;
     }
 
     public FormValidation doCheckNewRepoName(@QueryParameter String value) {
@@ -149,6 +158,19 @@ public class CentralRepositories extends ManagementLink implements RepoContainer
         return FormValidation.ok();
     }
 
+    /**
+     * Stapler fixture to navigate to <code>build-script-repositories/repo-name</code>
+     *
+     * @param name     the name of the repository.
+     * @param request  request
+     * @param response response
+     * @return the repository or null if none with that name is found.
+     * @see #getRepo(String)
+     */
+    public AbstractRepository getDynamic(String name, StaplerRequest request, StaplerResponse response) {
+        return getRepo(name);
+    }
+
     @Override
     public FilePath getRootDir() {
         return Jenkins.getInstance().getRootPath().child(DIR_NAME);
@@ -157,5 +179,10 @@ public class CentralRepositories extends ManagementLink implements RepoContainer
     @Override
     public void save() throws IOException {
         PluginImpl.getInstance().save();
+    }
+
+    @Override
+    public String getFullUrl() {
+        return Jenkins.getInstance().getRootUrl() + "/" + getUrlName();
     }
 }

@@ -21,21 +21,22 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   ~ THE SOFTWARE.
   -->
-<?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
-    <table width="50%" cellpadding="2" cellspacing="0" border="0" style="border-bottom: 1px solid gray; margin-bottom: 10px">
-        <tr>
-            <td><strong style="font-size: larger;">${it.name}</strong></td>
-        </tr>
-        <tr>
-            <td>
-                <st:include page="view.jelly" it="${it}" optional="true"/>
-            </td>
-        </tr>
-        <tr>
-            <td style="border-top: 1px solid gray;">
-                <st:include page="toolbar.jelly" it="${it}"/>
-            </td>
-        </tr>
-    </table>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <l:layout title="${%Configure} ${it.name}">
+        <l:side-panel>
+            <st:include it="${it.getOwner()}" class="${it.getOwner().getClass()}" page="sidepanel.jelly"/>
+        </l:side-panel>
+        <l:main-panel>
+            <f:form action="configSubmit" method="POST" name="theForm">
+                <f:entry title="${%Name}" field="name">
+                    <f:readOnlyTextbox name="name" value="${it.getName()}"/>
+                </f:entry>
+                <st:include page="config.jelly" it="${it}" optional="true"/>
+                <f:block>
+                    <f:submit name="submitBtn" value="${%Save}"/>
+                </f:block>
+            </f:form>
+        </l:main-panel>
+    </l:layout>
 </j:jelly>
