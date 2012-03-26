@@ -23,17 +23,30 @@
   -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
-    <table width="50%" cellpadding="2" cellspacing="0" border="0" style="border-bottom: 1px solid gray; margin-bottom: 10px">
+    <table width="100%" cellpadding="2" cellspacing="0" border="0"
+           style="border-bottom: 1px solid gray; margin-bottom: 10px">
         <tr>
-            <td><strong style="font-size: larger;">${it.name}</strong></td>
+            <td colspan="2"><strong style="font-size: larger;">${it.name}</strong></td>
         </tr>
         <tr>
-            <td>
+            <td width="50%" valign="top">
                 <st:include page="view.jelly" it="${it}" optional="true"/>
+            </td>
+            <td width="50%">
+                <j:forEach items="${it.getErrors()}" var="err">
+                    <div class="error">
+                        ${err}
+                    </div>
+                </j:forEach>
+                <j:forEach items="${it.getWarnings()}" var="warn">
+                    <div class="warning">
+                        ${warn}
+                    </div>
+                </j:forEach>
             </td>
         </tr>
         <tr>
-            <td style="border-top: 1px solid gray;">
+            <td colspan="2" style="border-top: 1px solid gray;">
                 <st:include page="toolbar.jelly" it="${it}"/>
             </td>
         </tr>

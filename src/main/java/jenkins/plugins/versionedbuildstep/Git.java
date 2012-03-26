@@ -24,6 +24,7 @@
 
 package jenkins.plugins.versionedbuildstep;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.Hudson;
 import hudson.plugins.git.GitAPI;
@@ -36,6 +37,7 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,8 +57,10 @@ public class Git {
 
     public Git(FilePath workspace) throws IOException, InterruptedException {
         logFile = workspace.getParent().child("repo-" + workspace.getName() + ".log");
-        api = new GitAPI("git", workspace, new StreamTaskListener(logFile.write()),
-                Hudson.getInstance().toComputer().getEnvironment(), null);
+        OutputStream logStream = logFile.write();
+        EnvVars environment = Hudson.getInstance().toComputer().getEnvironment();
+        api = new GitAPI("git", workspace, new StreamTaskListener(logStream),
+                environment, null);
     }
 
 

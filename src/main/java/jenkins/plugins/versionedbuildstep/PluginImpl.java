@@ -25,19 +25,36 @@
 package jenkins.plugins.versionedbuildstep;
 
 import hudson.Plugin;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
 import jenkins.model.Jenkins;
 import jenkins.plugins.versionedbuildstep.model.AbstractRepository;
-import jenkins.plugins.versionedbuildstep.model.GitRepository;
+import jenkins.plugins.versionedbuildstep.timers.CentralRepositoriesUpdater;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 /**
  * @author Robert Sandell &lt;sandell.robert@gmail.com&gt;
  */
 public class PluginImpl extends Plugin {
 
+    private static Logger logger = Logger.getLogger(PluginImpl.class.getName());
+
+    /**
+     * Master node needs to be started and there is no init milestone for slaves connected.
+     * Lets hope 10 seconds is enough.
+     */
+    private static final long CENTRAL_REPOSITORIES_START = TimeUnit.SECONDS.toMillis(10);
+    private static final long CENTRAL_REPOSITORIES_PERIOD = TimeUnit.MINUTES.toMillis(3);
+
     private Map<String, AbstractRepository> centralRepositories;
+    private transient Timer timer;
+    private transient CentralRepositoriesUpdater centralRepositoriesUpdater;
 
     @Override
     public void start() throws Exception {
@@ -45,6 +62,25 @@ public class PluginImpl extends Plugin {
         if (centralRepositories == null) {
             centralRepositories = new HashMap<String, AbstractRepository>();
         }
+        timer = new Timer("Repositories Update Timer");
+    }
+
+    private void initializeUpdaters() {
+        logger.info("Initializing Repository updaters...");
+        centralRepositoriesUpdater = new CentralRepositoriesUpdater();
+        timer.scheduleAtFixedRate(centralRepositoriesUpdater,
+                CENTRAL_REPOSITORIES_START,
+                CENTRAL_REPOSITORIES_PERIOD);
+    }
+
+    @Initializer(after = InitMilestone.JOB_LOADED, before = InitMilestone.COMPLETED)
+    public static void init() throws IOException {
+        getInstance().initializeUpdaters();
+    }
+
+    @Override
+    public void stop() throws Exception {
+        timer.cancel();
     }
 
     public static PluginImpl getInstance() {

@@ -29,13 +29,13 @@ import hudson.FilePath;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
-import jenkins.plugins.versionedbuildstep.CentralRepositories;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -72,9 +72,28 @@ public abstract class AbstractRepository implements Describable<AbstractReposito
         this.owner = owner;
     }
 
-    public abstract void init() throws IOException, InterruptedException;
+    public abstract void init();
 
-    public abstract void update() throws IOException, InterruptedException;
+    /**
+     * Updates the local clone of the repository from the upstream.
+     * Any errors or warnings should be handled and reported via
+     * {@link #getErrors()} or {@link #getWarnings()}.
+     */
+    public abstract void update();
+
+    /**
+     * Any errors that has happened during for example {@link #update()}.
+     *
+     * @return a list of any errors.
+     */
+    public abstract Collection<String> getErrors();
+
+    /**
+     * Any warnings that has happened during for example {@link #update()}.
+     *
+     * @return a list of any errors.
+     */
+    public abstract Collection<String> getWarnings();
 
     public abstract void reConfigure(StaplerRequest request, StaplerResponse response)
             throws Descriptor.FormException, ServletException;
@@ -140,6 +159,7 @@ public abstract class AbstractRepository implements Describable<AbstractReposito
 
         /**
          * All registered {@link RepositoryDescriptor}s.
+         *
          * @return the list of them.
          */
         public static ExtensionList<RepositoryDescriptor> all() {
@@ -147,7 +167,7 @@ public abstract class AbstractRepository implements Describable<AbstractReposito
         }
 
         public static RepositoryDescriptor getFor(String repoClassName) {
-            for(RepositoryDescriptor d : all()) {
+            for (RepositoryDescriptor d : all()) {
                 if (d.clazz.getName().equals(repoClassName)) {
                     return d;
                 }

@@ -26,17 +26,21 @@ package jenkins.plugins.versionedbuildstep.model;
 
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitException;
 import jenkins.model.Jenkins;
-import jenkins.plugins.versionedbuildstep.CentralRepositories;
 import jenkins.plugins.versionedbuildstep.Git;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Base class for repositories.
@@ -45,9 +49,12 @@ import java.util.Date;
  */
 public class GitRepository extends AbstractRepository {
 
-    private String url;
+    private static final Logger logger = Logger.getLogger(GitRepository.class.getName());
 
+    private String url;
     private transient Git git;
+    private transient String warning;
+    private transient String error;
 
     private GitRepository(String name, FilePath repoDir, Date created, Date lastUpdated, RepoContainer<AbstractRepository> owner, String url) {
         super(name, repoDir, created, lastUpdated, owner);
@@ -65,15 +72,71 @@ public class GitRepository extends AbstractRepository {
         return git;
     }
 
-    public void init() throws GitException, IOException, InterruptedException {
-        getGit().doClone(url);
+    @Override
+    public void init() {
+        logger.log(Level.FINE, "Running Init {0}...", getName());
+        warning = null;
+        error = null;
+        try {
+            if (Util.fixEmpty(url) != null) {
+                getGit().doClone(url);
+            } else {
+                warning = "URL is not set.";
+            }
+        } catch (GitException ge) {
+            logger.log(Level.WARNING, "Exception during git init of " + getName(), ge);
+            error = "git error during init: " + ge.getMessage();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Exception during git init of " + getName(), e);
+            error = "I/O error during init: " + e.getMessage();
+        } catch (InterruptedException e) {
+            warning = "Interrupted while running init: " + e.getMessage();
+        }
+        logger.log(Level.FINE, "Init Done {0}", getName());
     }
 
-    public void update() throws GitException, IOException, InterruptedException {
-        if (getGit().isInitialized()) {
-            getGit().doFetch(url);
+    @Override
+    public void update() {
+        logger.log(Level.FINE, "Running Update {0}...", getName());
+        warning = null;
+        error = null;
+        try {
+            if (getGit().isInitialized()) {
+                if (Util.fixEmpty(url) != null) {
+                    getGit().doFetch(url);
+                } else {
+                    warning = "URL is not set.";
+                }
+            } else {
+                init();
+            }
+        } catch (GitException ge) {
+            logger.log(Level.WARNING, "Exception during git update of " + getName(), ge);
+            error = "git error during update: " + ge.getMessage();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Exception during git update of " + getName(), e);
+            error = "I/O error during update: " + e.getMessage();
+        } catch (InterruptedException e) {
+            warning = "Interrupted while running update: " + e.getMessage();
+        }
+        logger.log(Level.FINE, "Update Done {0}", getName());
+    }
+
+    @Override
+    public Collection<String> getErrors() {
+        if (Util.fixEmpty(error) != null) {
+            return Collections.singleton(error);
         } else {
-            init();
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public Collection<String> getWarnings() {
+        if (Util.fixEmpty(warning) != null) {
+            return Collections.singleton(warning);
+        } else {
+            return Collections.emptyList();
         }
     }
 
